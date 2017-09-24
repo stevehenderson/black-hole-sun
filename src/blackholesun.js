@@ -200,7 +200,8 @@ var span = 360;
                 .startAngle(0 * (pi/180)) //converting from degs to radians
                 .endAngle(360 * (pi/180)) //just radians
 
-            //Background Circle              
+            //Background Circle             
+            /* 
             var backgroundCircle = svg.select("path.background-circle");
             backgroundCircle                            
                 .attr("d", arc)
@@ -209,7 +210,7 @@ var span = 360;
                 radialAxis.select("circle.outside-circle").attr({
                 r: radius
             }).style(lineStyle);
-             
+             */
             //Outside ticks
             var angularAxis = svg.select(".angular.axis-group").selectAll("g.angular-tick").data(angularAxisRange);
             var angularAxisEnter = angularAxis.enter().append("g").classed("angular-tick", true);
@@ -245,8 +246,8 @@ var span = 360;
             
                         //Create an arc
                         var arc = d3.svg.arc()
-                            .innerRadius(radius+10)
-                            .outerRadius(radius+20)
+                            .innerRadius(radius-5)
+                            .outerRadius(radius+10)
                             .startAngle(sarc * (pi/180)) //converting from degs to radians
                             .endAngle(earc * (pi/180)) //just radians
 

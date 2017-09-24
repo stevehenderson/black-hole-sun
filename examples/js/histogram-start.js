@@ -24,7 +24,7 @@ var configs = [
             
           ],
       
-      layout: { title: 'BlackHoleSun', width: 300, height: 300, margin: { left: 30, right: 30, top: 00, bottom: 00, pad: 0 }, 
+      layout: { title: '', width: 400, height: 400, margin: { left: 30, right: 30, top: 00, bottom: 00, pad: 0 }, 
         font: { family: 'Arial, sans-serif', size: 10, color: '#3ae1d0' },
         direction: 'clockwise', 
         orientation: 375, 
