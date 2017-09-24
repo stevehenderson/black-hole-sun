@@ -39,8 +39,8 @@ configs.forEach(function(_config){
     var config = {layout: {width: 300, height: 300}};
     µ.util.deepExtend(config, _config);
     console.log(JSON.stringify(µ.adapter.plotly().convert(config, true)));
-    var ms =blackholesun.Axis().config(config).render(d3.select('#polarcontainer').append('div'));
-    var ms =blackholesun.Axis().config(config).render(d3.select('#polarcontainer2').append('div'));
+    var ms =blackholesun.Axis().config(config).render(d3.select('#blackholesun').append('div'));
+    
 
 });
 
