@@ -9,21 +9,20 @@ var configs = [
             //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 45, 0, 0, 0], color: '#529560', name: 'Layer3', geometry: 'AreaChart', groupId: 0},
             //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 0, 65, 0, 0], color: '#d59241', name: 'Layer4', geometry: 'AreaChart', groupId: 0},
             //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 0, 0, 75, 0], color: '#c54b5a', name: 'Layer5', geometry: 'AreaChart', groupId: 0},
-            //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 0, 0, 0, 85], color: '#3ae1d0', name: 'Layer6', geometry: 'AreaChart', groupId: 0}
-            //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 0, 0, 0, 85], color: '#3ae1d0', name: 'Layer6', geometry: 'AreaChart', groupId: 0}
-
-            {t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [15, 23, 45, 65, 75, 85], name: 'Layer6', geometry: 'AreaChart', groupId: 0},
-            {title: "malware", arcWidth: 60, color: '#3ae1d0', groupId: 0}
-
+            //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 0, 0, 0, 85], color: '#3ae1d0', name: 'Layer6', geometry: 'AreaChart', groupId: 0},
+            //{t: ['BBC', 'MSNBC', 'CBS', 'ABC', 'CNN', 'FOX'], r: [0, 0, 0, 0, 0, 85], color: '#3ae1d0', name: 'Layer6', geometry: 'AreaChart', groupId: 0},
+            {label: 'Malware', widthDegrees: 60, color: '#3ae1d0', name: 'Layer6', geometry: 'AreaChart', groupId: 0}
+            //{t: ['BBC', 'MSNBC', 'CBS', 'ABC'], r: [15, 23, 45], name: 'Layer6', geometry: 'AreaChart', groupId: 0},
+            
           ],
       
-      layout: { title: '', width: 300, height: 300, margin: { left: 30, right: 30, top: -200, bottom: 00, pad: 0 }, 
+      layout: { title: 'BlackHoleSun', width: 300, height: 300, margin: { left: 30, right: 30, top: 00, bottom: 00, pad: 0 }, 
         font: { family: 'Arial, sans-serif', size: 10, color: '#3ae1d0' },
         direction: 'clockwise', 
         orientation: 375, 
-        span: 180,
+        span: 360,
         reverseOrder: true,
-        radialAxis: { visible: false},
+        radialAxis: { visible: true},
         barmode: 'stack', backgroundColor: '#3ae1d0', showLegend: false }
     }            
 ];
