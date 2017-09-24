@@ -55,7 +55,7 @@ var span = 360;
                 d.t = Array.isArray(d.t[0]) ? d.t : [ d.t ];
                 d.r = Array.isArray(d.r[0]) ? d.r : [ d.r ];
             });
-            var radius = Math.min(axisConfig.width - axisConfig.margin.left - axisConfig.margin.right, axisConfig.height - axisConfig.margin.top - axisConfig.margin.bottom) / 2;
+            var radius = Math.min(axisConfig.width - axisConfig.margin.left - axisConfig.margin.right-50, axisConfig.height - axisConfig.margin.top - axisConfig.margin.bottom-50) / 2;
             radius = Math.max(10, radius);
             var chartCenter = [ axisConfig.margin.left + radius, axisConfig.margin.top + radius ];
             var extent;
@@ -168,7 +168,7 @@ var span = 360;
                 var titleBBox = title.node().getBBox();
                 title.attr({
                     x: chartCenter[0] - titleBBox.width / 2,
-                    y: chartCenter[1] - radius - 20
+                    y: chartCenter[1] - radius - 30
                 });
             }
 
@@ -237,20 +237,20 @@ var span = 360;
             
             if (data[0] || hasGeometry) {
                 var geometryConfigs = [];
-                aCount=0;
-                data.forEach(function(d, i) {
-                    a=1;
+                
+                data.forEach(function(d, i) {                    
                     if(typeof d.label != "undefined") {
-                        width = d.widthDegrees
+                        sarc = d.startArc
+                        earc = d.endArc
             
                         //Create an arc
                         var arc = d3.svg.arc()
-                            .innerRadius(110)
-                            .outerRadius(120)
-                            .startAngle(aCount * (pi/180)) //converting from degs to radians
-                            .endAngle(aCount+width * (pi/180)) //just radians
+                            .innerRadius(radius+10)
+                            .outerRadius(radius+20)
+                            .startAngle(sarc * (pi/180)) //converting from degs to radians
+                            .endAngle(earc * (pi/180)) //just radians
 
-                        aCount=aCount+width;
+                        
                         geometryContainer.enter().append("g")
                         .attr({
                             "class": function(d, i) {
