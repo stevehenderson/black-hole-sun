@@ -3,7 +3,7 @@
 var configs = [    
     //r:  Length of BLUE series
     {
-      data: [                  
+      dimensions: [                  
             {label: 'Twitter', startArc: 0, endArc: 60, color: '#761fe8', name: 'Layer1', geometry: 'AreaChart', groupId: 1},
             {label: 'Malware', startArc: 60, endArc: 100, color: '#0b8b94', name: 'Layer2', geometry: 'AreaChart', groupId: 2},
             {label: 'Botnets', startArc: 100, endArc: 120, color: '#9d493f', name: 'Layer3', geometry: 'AreaChart', groupId: 3},

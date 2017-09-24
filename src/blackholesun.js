@@ -9,7 +9,7 @@ var span = 360;
 
 µ.Axis = function module() {
     var config = {
-        data: [],
+        dimensions: [],
         layout: {}
     }, inputConfig = {}, liveConfig = {};
     var svg, container, dispatch = d3.dispatch("hover"), radialScale, angularScale;
@@ -17,7 +17,7 @@ var span = 360;
     var exports = {};
     function render(_container) {
         container = _container || container;
-        var data = config.data;
+        var dimensions = config.dimensions;
         var axisConfig = config.layout;
           
 
@@ -25,15 +25,15 @@ var span = 360;
             container = d3.select(container);
         }
        
-        //Read each data line
-        container.datum(data).each(function(_data, _index) {
-            var dataOriginal = _data.slice();
+        //Read each dimensions line
+        container.datum(dimensions).each(function(_dimensions, _index) {
+            var dimensionsOriginal = _dimensions.slice();
             liveConfig = {
-                data: µ.util.cloneJson(dataOriginal),
+                dimensions: µ.util.cloneJson(dimensionsOriginal),
                 layout: µ.util.cloneJson(axisConfig)
             };
             var colorIndex = 0;
-            dataOriginal.forEach(function(d, i) {
+            dimensionsOriginal.forEach(function(d, i) {
                 if (!d.color) {
                     d.color = axisConfig.defaultColorRange[colorIndex];
                     colorIndex = (colorIndex + 1) % axisConfig.defaultColorRange.length;
@@ -41,17 +41,17 @@ var span = 360;
                 if (!d.strokeColor) {
                     d.strokeColor = d.geometry === "LinePlot" ? d.color : d3.rgb(d.color).darker().toString();
                 }
-                liveConfig.data[i].color = d.color;
-                liveConfig.data[i].strokeColor = d.strokeColor;
-                liveConfig.data[i].strokeDash = d.strokeDash;
-                liveConfig.data[i].strokeSize = d.strokeSize;
+                liveConfig.dimensions[i].color = d.color;
+                liveConfig.dimensions[i].strokeColor = d.strokeColor;
+                liveConfig.dimensions[i].strokeDash = d.strokeDash;
+                liveConfig.dimensions[i].strokeSize = d.strokeSize;
             });
-            var data = dataOriginal.filter(function(d, i) {
+            var dimensions = dimensionsOriginal.filter(function(d, i) {
                 var visible = d.visible;
                 return typeof visible === "undefined" || visible === true;
             });
            
-            data.forEach(function(d, i) {
+            dimensions.forEach(function(d, i) {
                 d.t = Array.isArray(d.t[0]) ? d.t : [ d.t ];
                 d.r = Array.isArray(d.r[0]) ? d.r : [ d.r ];
             });
@@ -60,18 +60,18 @@ var span = 360;
             var chartCenter = [ axisConfig.margin.left + radius, axisConfig.margin.top + radius ];
             var extent;
             
-            extent = d3.extent(µ.util.flattenArray(data.map(function(d, i) {
+            extent = d3.extent(µ.util.flattenArray(dimensions.map(function(d, i) {
                 return d.r;
             })));
         
-            if (axisConfig.radialAxis.domain !== µ.DATAEXTENT) {
+            if (axisConfig.radialAxis.domain !== µ.dimensionsEXTENT) {
                 extent[0] = 0;
             }
 
             //Figure out the radial scale
-            radialScale = d3.scale.linear().domain(axisConfig.radialAxis.domain !== µ.DATAEXTENT && axisConfig.radialAxis.domain ? axisConfig.radialAxis.domain : extent).range([ 0.6*radius, radius ]);
+            radialScale = d3.scale.linear().domain(axisConfig.radialAxis.domain !== µ.dimensionsEXTENT && axisConfig.radialAxis.domain ? axisConfig.radialAxis.domain : extent).range([ 0.6*radius, radius ]);
             liveConfig.layout.radialAxis.domain = radialScale.domain();
-            var angularDataMerged = µ.util.flattenArray(data.map(function(d, i) {
+            var angulardimensionsMerged = µ.util.flattenArray(dimensions.map(function(d, i) {
                 return d.t;
             }));
             
@@ -80,9 +80,9 @@ var span = 360;
             var hasOnlyLineOrDotPlot = false;
             var isOrdinal= false;
             var needsEndSpacing = axisConfig.needsEndSpacing === null ? isOrdinal || !hasOnlyLineOrDotPlot : axisConfig.needsEndSpacing;
-            var useProvidedDomain = axisConfig.angularAxis.domain && axisConfig.angularAxis.domain !== µ.DATAEXTENT && !isOrdinal && axisConfig.angularAxis.domain[0] >= 0;
-            var angularDomain = useProvidedDomain ? axisConfig.angularAxis.domain : d3.extent(angularDataMerged);
-            var angularDomainStep = Math.abs(angularDataMerged[1] - angularDataMerged[0]);
+            var useProvidedDomain = axisConfig.angularAxis.domain && axisConfig.angularAxis.domain !== µ.dimensionsEXTENT && !isOrdinal && axisConfig.angularAxis.domain[0] >= 0;
+            var angularDomain = useProvidedDomain ? axisConfig.angularAxis.domain : d3.extent(angulardimensionsMerged);
+            var angularDomainStep = Math.abs(angulardimensionsMerged[1] - angulardimensionsMerged[0]);
             if (hasOnlyLineOrDotPlot && !isOrdinal) {
                 angularDomainStep = 0;
             }
@@ -234,12 +234,12 @@ var span = 360;
 
             //Series Arcs
             var hasGeometry = svg.select("g.geometry-group").selectAll("g").size() > 0;
-            var geometryContainer = svg.select("g.geometry-group").selectAll("g.geometry").data(data);
+            var geometryContainer = svg.select("g.geometry-group").selectAll("g.geometry").data(dimensions);
             
-            if (data[0] || hasGeometry) {
+            if (dimensions[0] || hasGeometry) {
                 var geometryConfigs = [];
                 
-                data.forEach(function(d, i) {                    
+                dimensions.forEach(function(d, i) {                    
                     if(typeof d.label != "undefined") {
                         sarc = d.startArc
                         earc = d.endArc
@@ -283,12 +283,12 @@ var span = 360;
             return config;
         }
         var xClone = µ.util.cloneJson(_x);
-        xClone.data.forEach(function(d, i) {
-            if (!config.data[i]) {
-                config.data[i] = {};
+        xClone.dimensions.forEach(function(d, i) {
+            if (!config.dimensions[i]) {
+                config.dimensions[i] = {};
             }
-            µ.util.deepExtend(config.data[i], µ.Axis.defaultConfig().data[0]);
-            µ.util.deepExtend(config.data[i], d);
+            µ.util.deepExtend(config.dimensions[i], µ.Axis.defaultConfig().dimensions[0]);
+            µ.util.deepExtend(config.dimensions[i], d);
         });
         µ.util.deepExtend(config.layout, µ.Axis.defaultConfig().layout);
         µ.util.deepExtend(config.layout, xClone.layout);
@@ -318,7 +318,7 @@ var span = 360;
 
 µ.Axis.defaultConfig = function(d, i) {
     var config = {
-        data: [ {
+        dimensions: [ {
             t: [ 1, 2, 3, 4 ],
             r: [ 10, 11, 12, 13 ],
             name: "Line1",
@@ -388,7 +388,7 @@ var span = 360;
 
 µ.util = {};
 
-µ.DATAEXTENT = "dataExtent";
+µ.dimensionsEXTENT = "dimensionsExtent";
 
 µ.AREA = "AreaChart";
 
@@ -411,18 +411,18 @@ var span = 360;
     return Math.random() * 2 - 1 + (Math.random() * 2 - 1) + (Math.random() * 2 - 1);
 };
 
-µ.util.dataFromEquation2 = function(_equation, _step) {
+µ.util.dimensionsFromEquation2 = function(_equation, _step) {
     var step = _step || 6;
     //spanset
-    var data = d3.range(0, span + step, step).map(function(deg, index) {
+    var dimensions = d3.range(0, span + step, step).map(function(deg, index) {
         var theta = deg * Math.PI / 180;
         var radius = _equation(theta);
         return [ deg, radius ];
     });
-    return data;
+    return dimensions;
 };
 
-µ.util.dataFromEquation = function(_equation, _step, _name) {
+µ.util.dimensionsFromEquation = function(_equation, _step, _name) {
     var step = _step || 6;
     var t = [], r = [];
     //spanset
@@ -624,7 +624,7 @@ var span = 360;
     var id = "tooltip-" + µ.tooltipPanel.uid++;
     var tickSize = 10;
     var exports = function() {
-        tooltipEl = config.container.selectAll("g." + id).data([ 0 ]);
+        tooltipEl = config.container.selectAll("g." + id).dimensions([ 0 ]);
         var tooltipEnter = tooltipEl.enter().append("g").classed(id, true).style({
             "pointer-events": "none",
             display: "none"
@@ -714,8 +714,8 @@ var span = 360;
     var exports = {};
     exports.convert = function(_inputConfig, reverse) {
         var outputConfig = {};
-        if (_inputConfig.data) {
-            outputConfig.data = _inputConfig.data.map(function(d, i) {
+        if (_inputConfig.dimensions) {
+            outputConfig.dimensions = _inputConfig.dimensions.map(function(d, i) {
                 var r = µ.util.deepExtend({}, d);
                 var toTranslate = [ [ r, [ "marker", "color" ], [ "color" ] ], [ r, [ "marker", "opacity" ], [ "opacity" ] ], [ r, [ "marker", "line", "color" ], [ "strokeColor" ] ], [ r, [ "marker", "line", "dash" ], [ "strokeDash" ] ], [ r, [ "marker", "line", "width" ], [ "strokeSize" ] ], [ r, [ "marker", "symbol" ], [ "dotType" ] ], [ r, [ "marker", "size" ], [ "dotSize" ] ], [ r, [ "marker", "barWidth" ], [ "barWidth" ] ], [ r, [ "line", "interpolation" ], [ "lineInterpolation" ] ], [ r, [ "showlegend" ], [ "visibleInLegend" ] ] ];
                 toTranslate.forEach(function(d, i) {
@@ -766,13 +766,13 @@ var span = 360;
                 return r;
             });
             if (!reverse && _inputConfig.layout && _inputConfig.layout.barmode === "stack") {
-                var duplicates = µ.util.duplicates(outputConfig.data.map(function(d, i) {
+                var duplicates = µ.util.duplicates(outputConfig.dimensions.map(function(d, i) {
                     return d.geometry;
                 }));
-                outputConfig.data.forEach(function(d, i) {
+                outputConfig.dimensions.forEach(function(d, i) {
                     var idx = duplicates.indexOf(d.geometry);
                     if (idx !== -1) {
-                        outputConfig.data[i].groupId = idx;
+                        outputConfig.dimensions[i].groupId = idx;
                     }
                 });
             }
@@ -858,22 +858,22 @@ var span = 360;
             container = d3.select(container);
         }
         container.datum(config).each(function(_config, _index) {
-            var isStack = !!_config[0].data.yStack;
-            var data = _config.map(function(d, i) {
+            var isStack = !!_config[0].dimensions.yStack;
+            var dimensions = _config.map(function(d, i) {
                 if (isStack) {
-                    return d3.zip(d.data.t[0], d.data.r[0], d.data.yStack[0]);
+                    return d3.zip(d.dimensions.t[0], d.dimensions.r[0], d.dimensions.yStack[0]);
                 } else {
-                    return d3.zip(d.data.t[0], d.data.r[0]);
+                    return d3.zip(d.dimensions.t[0], d.dimensions.r[0]);
                 }
             });
             var angularScale = geometryConfig.angularScale;
             var domainMin = geometryConfig.radialScale.domain()[0];
             var generator = {};
             generator.bar = function(d, i, pI) {
-                var dataConfig = _config[pI].data;
+                var dimensionsConfig = _config[pI].dimensions;
                 var h = geometryConfig.radialScale(d[1]) - geometryConfig.radialScale(0);
                 var stackTop = geometryConfig.radialScale(d[2] || 0);
-                var w = dataConfig.barWidth;
+                var w = dimensionsConfig.barWidth;
                 d3.select(this).attr({
                     "class": "mark bar",
                     d: "M" + [ [ h + stackTop, -w / 2 ], [ h + stackTop, w / 2 ], [ stackTop, w / 2 ], [ stackTop, -w / 2 ] ].join("L") + "Z",
@@ -883,29 +883,29 @@ var span = 360;
                 });
             };
             generator.dot = function(d, i, pI) {
-                var stackedData = d[2] ? [ d[0], d[1] + d[2] ] : d;
-                var symbol = d3.svg.symbol().size(_config[pI].data.dotSize).type(_config[pI].data.dotType)(d, i);
+                var stackeddimensions = d[2] ? [ d[0], d[1] + d[2] ] : d;
+                var symbol = d3.svg.symbol().size(_config[pI].dimensions.dotSize).type(_config[pI].dimensions.dotType)(d, i);
                 d3.select(this).attr({
                     "class": "mark dot",
                     d: symbol,
                     transform: function(d, i) {
-                        var coord = convertToCartesian(getPolarCoordinates(stackedData));
+                        var coord = convertToCartesian(getPolarCoordinates(stackeddimensions));
                         return "translate(" + [ coord.x, coord.y ] + ")";
                     }
                 });
             };
-            var line = d3.svg.line.radial().interpolate(_config[0].data.lineInterpolation).radius(function(d) {
+            var line = d3.svg.line.radial().interpolate(_config[0].dimensions.lineInterpolation).radius(function(d) {
                 return geometryConfig.radialScale(d[1]);
             }).angle(function(d) {
                 return geometryConfig.angularScale(d[0]) * Math.PI / 180;
             });
             generator.line = function(d, i, pI) {
-                var lineData = d[2] ? data[pI].map(function(d, i) {
+                var linedimensions = d[2] ? dimensions[pI].map(function(d, i) {
                     return [ d[0], d[1] + d[2] ];
-                }) : data[pI];
+                }) : dimensions[pI];
                 d3.select(this).each(generator.dot).style({
                     opacity: function(dB, iB) {
-                        return +_config[pI].data.dotVisible;
+                        return +_config[pI].dimensions.dotVisible;
                     },
                     fill: markStyle.stroke(d, i, pI)
                 }).attr({
@@ -914,11 +914,11 @@ var span = 360;
                 if (i > 0) {
                     return;
                 }
-                var lineSelection = d3.select(this.parentNode).selectAll("path.line").data([ 0 ]);
+                var lineSelection = d3.select(this.parentNode).selectAll("path.line").dimensions([ 0 ]);
                 lineSelection.enter().insert("path");
                 lineSelection.attr({
                     "class": "line",
-                    d: line(lineData),
+                    d: line(linedimensions),
                     transform: function(dB, iB) {
                         return "rotate(" + (geometryConfig.orientation + 90) + ")";
                     },
@@ -946,7 +946,7 @@ var span = 360;
                 });
             };
             var angularRange = geometryConfig.angularScale.range();
-            var triangleAngle = Math.abs(angularRange[1] - angularRange[0]) / data[0].length * Math.PI / 180;
+            var triangleAngle = Math.abs(angularRange[1] - angularRange[0]) / dimensions[0].length * Math.PI / 180;
             var arc = d3.svg.arc().startAngle(function(d) {
                 return -triangleAngle / 2;
             }).endAngle(function(d) {
@@ -972,39 +972,39 @@ var span = 360;
             var pie = d3.layout.pie().value(function(d) {
                 return d[1];
             });
-            var pieData = pie(data[0]);
+            var piedimensions = pie(dimensions[0]);
             generator.pie = function(d, i, pI) {
                 d3.select(this).attr({
                     "class": "mark arc",
-                    d: pieArc(pieData[i], i)
+                    d: pieArc(piedimensions[i], i)
                 });
             };
             var markStyle = {
                 fill: function(d, i, pI) {
-                    return _config[pI].data.color;
+                    return _config[pI].dimensions.color;
                 },
                 stroke: function(d, i, pI) {
-                    return _config[pI].data.strokeColor;
+                    return _config[pI].dimensions.strokeColor;
                 },
                 "stroke-width": function(d, i, pI) {
                     return 0;
-                    //return _config[pI].data.strokeSize + "px";  HACK
+                    //return _config[pI].dimensions.strokeSize + "px";  HACK
                 },
                 "stroke-dasharray": function(d, i, pI) {
-                    return dashArray[_config[pI].data.strokeDash];
+                    return dashArray[_config[pI].dimensions.strokeDash];
                 },
                 opacity: function(d, i, pI) {
-                    return _config[pI].data.opacity;
+                    return _config[pI].dimensions.opacity;
                 },
                 display: function(d, i, pI) {
-                    return typeof _config[pI].data.visible === "undefined" || _config[pI].data.visible ? "block" : "none";
+                    return typeof _config[pI].dimensions.visible === "undefined" || _config[pI].dimensions.visible ? "block" : "none";
                 }
             };
-            var geometryLayer = d3.select(this).selectAll("g.layer").data(data);
+            var geometryLayer = d3.select(this).selectAll("g.layer").dimensions(dimensions);
             geometryLayer.enter().append("g").attr({
                 "class": "layer"
             });
-            var geometry = geometryLayer.selectAll("path.mark").data(function(d, i) {
+            var geometry = geometryLayer.selectAll("path.mark").dimensions(function(d, i) {
                 return d;
             });
             geometry.enter().append("path").attr({
@@ -1053,7 +1053,7 @@ var span = 360;
 
 µ.PolyChart.defaultConfig = function() {
     var config = {
-        data: {
+        dimensions: {
             name: "geom1",
             t: [ [ 1, 2, 3, 4 ] ],
             r: [ [ 1, 2, 3, 4 ] ],
