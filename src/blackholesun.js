@@ -23,7 +23,7 @@ function getDimensionByGroupId(aGroupId) {
 
     nodes.each(function(d,i) {    
         if(d.groupId==aGroupId)               {
-            console.log("Found node "+ aGroupId + " with label " + d.label);   
+            //console.log("Found node "+ aGroupId + " with label " + d.label);   
             node = d;  
          }
        
@@ -50,6 +50,29 @@ function getDimensionByLabel(aLabel) {
 
 
 
+/*
+*  Generates some random bars
+*/
+function randomBars() {
+
+    for(gId=1; gId <=14; gId++ ) {
+
+        var dim = getDimensionByGroupId(gId)
+
+        if(dim.type != "undefined") {
+            sarc = dim.startArc;
+            earc = dim.endArc;
+            w=(earc-sarc);
+            cap = Math.random();
+            for(i=0; i < w; i++) {
+                nextLevel = cap*Math.random();
+                plotBar(gId, i, nextLevel);
+            }
+        }
+    }
+}
+
+
 /**
 * Adds a bar given a groupId, channel within that label {0..width}, and a level (0..1)
 */
@@ -70,31 +93,46 @@ function plotBar(gId, channel, level) {
         var graphicsContainer = svg.select("g.geometry-group");
            
         
-        console.log("adding a line");
+        
 
         cx = 0;
         cy = 0;
 
-        tx = Math.cos(channelArc-90 * (Math.PI / 180));
-        ty = Math.sin(channelArc-90 * (Math.PI / 180));
+        tx = Math.cos((channelArc-90) * (Math.PI / 180));
+        ty = Math.sin((channelArc-90) * (Math.PI / 180));
 
-        //outer ring 
+
+        console.log("adding a line channelArc:" + channelArc + " tx:" + tx + "   ty:" + ty);
+
+        //Scale lines based on level
+        s1 = level/0.3;
+        if(s1 > 1) s1 =1;
+
+        s2 = level/0.6;
+        if(s2 > 1) s2 =1;
+
+        s3 = level/1 ;
+        if(s3 > 1) s3 =1;
+
+        //outer ring -- always static
         r0x = tx * 0.90 * radius;
         r0y = ty * 0.90 * radius;
 
         //low ring 
-        r1x = tx * 0.75 * radius;
-        r1y = ty * 0.75 * radius;
+        r1x = tx * (0.90-(s1*0.15)) * radius;
+        r1y = ty * (0.90-(s1*0.15)) * radius;
 
         //med ring 
-        r2x = tx * 0.6 * radius;
-        r2y = ty * 0.6 * radius;
+        r2x = tx * (0.90-(s2*0.30)) * radius;
+        r2y = ty * (0.90-(s2*0.30)) * radius;
 
 
         //highring 
-        r3x = tx * 0.4 * radius;
-        r3y = ty * 0.4 * radius;
+        r3x = tx * (0.90-(s3*0.50)) * radius;
+        r3y = ty * (0.90-(s3*0.50)) * radius;
 
+
+    
 
         var line1Data = [ { "x": r1x,   "y": r1y},  { "x": r0x,  "y": r0y}]
         var line2Data = [ { "x": r2x,   "y": r2y},  { "x": r1x,  "y": r1y}]
@@ -107,6 +145,7 @@ function plotBar(gId, channel, level) {
          .interpolate("linear");
         
        
+       if(level > 0) {
         graphicsContainer.append("path")
         .attr("d", lineFunction(line1Data))
         .attr("stroke", "#3ae1d0")
@@ -114,8 +153,10 @@ function plotBar(gId, channel, level) {
         .attr("startArc", sarc)        
         .attr("fill", "none")
         .style("opacity", .75);
+        }
 
 
+        if(level > 0.3) {
         graphicsContainer.append("path")
         .attr("d", lineFunction(line2Data))
         .attr("stroke", "#ffaa01")
@@ -123,7 +164,9 @@ function plotBar(gId, channel, level) {
         .attr("startArc", sarc)        
         .attr("fill", "none")
         .style("opacity", .75);
+        }
 
+        if(level > 0.6) {
         graphicsContainer.append("path")
         .attr("d", lineFunction(line3Data))
         .attr("stroke", "#ff0b00")
@@ -131,7 +174,7 @@ function plotBar(gId, channel, level) {
         .attr("startArc", sarc)        
         .attr("fill", "none")
         .style("opacity", .75);
-
+        }
 
     
 
@@ -323,7 +366,7 @@ function plotBar(gId, channel, level) {
                 var gridCircles = radialAxis.selectAll("circle.grid-circle").data(radialScale.ticks(3));              
                 gridCircles.enter().append("circle");
                 gridCircles.attr("r", radialScale);                
-                gridCircles.style("opacity", 0.6);
+                gridCircles.style("opacity", 0.4);
                 gridCircles.style("stroke", "#3ae1d0")
                 gridCircles.style("fill", "none")
                 gridCircles.exit().remove();
@@ -415,7 +458,10 @@ function plotBar(gId, channel, level) {
         //STEVE TEST
         getDimensionByGroupId(5);
         getDimensionByLabel("CVE");
-        plotBar(1,1,1);
+        plotBar(1,1,0.6);
+        plotBar(12,1,0.2);
+        plotBar(12,5,0.8);
+        randomBars();
 
         return exports;
     }
