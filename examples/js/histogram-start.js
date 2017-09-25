@@ -1,4 +1,4 @@
-
+﻿
   
 var configs = [    
     //r:  Length of BLUE series
@@ -37,8 +37,8 @@ var configs = [
 
 configs.forEach(function(_config){
     var config = {layout: {width: 300, height: 300}};
-    µ.util.deepExtend(config, _config);
-    console.log(JSON.stringify(µ.adapter.plotly().convert(config, true)));
+    mu.util.deepExtend(config, _config);
+    console.log(JSON.stringify(mu.adapter.plotly().convert(config, true)));
     var ms =blackholesun.Axis().config(config).render(d3.select('#blackholesun').append('div'));
     
 
