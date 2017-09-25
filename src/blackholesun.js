@@ -7,12 +7,150 @@ var µ = blackholesun;
 //Default arc span of the plot, in degrees.  360 for full polar plot
 var span = 360;
 
+var svg;
+
+var chartCenter;
+
+var radius;
+
+/**
+*   Return a dimension arc given a groupID
+*/
+function getDimensionByGroupId(aGroupId) {
+    var node = null;
+    var outerBandContainer = svg.select("g.outer-band-group");
+    var nodes = outerBandContainer.selectAll("path");
+
+    nodes.each(function(d,i) {    
+        if(d.groupId==aGroupId)               {
+            console.log("Found node "+ aGroupId + " with label " + d.label);   
+            node = d;  
+         }
+       
+    });
+    return node;
+}
+
+/**
+*   Return a dimension arc given a label
+*/
+function getDimensionByLabel(aLabel) {
+    var node = null;
+    var outerBandContainer = svg.select("g.outer-band-group");
+    var nodes = outerBandContainer.selectAll("path");
+
+    nodes.each(function(d,i) {    
+        if(d.label==aLabel)               {
+            console.log("Found node "+ d.groupId + " with label " + d.label);   
+            node = d;  
+         }       
+    });
+    return node;
+}
+
+
+
+/**
+* Adds a bar given a groupId, channel within that label {0..width}, and a level (0..1)
+*/
+function plotBar(gId, channel, level) {
+
+    //Get the dimension
+    var dim = getDimensionByGroupId(gId)
+    if(dim.type != "undefined") {
+
+        sarc= dim.startArc;
+        earc = dim.endArc;
+
+        channelArc = sarc + channel;
+
+        if(channelArc > earc) channelArc = earc;
+
+              
+        var graphicsContainer = svg.select("g.geometry-group");
+           
+        
+        console.log("adding a line");
+
+        cx = 0;
+        cy = 0;
+
+        tx = Math.cos(channelArc-90 * (Math.PI / 180));
+        ty = Math.sin(channelArc-90 * (Math.PI / 180));
+
+        //outer ring 
+        r0x = tx * 0.90 * radius;
+        r0y = ty * 0.90 * radius;
+
+        //low ring 
+        r1x = tx * 0.75 * radius;
+        r1y = ty * 0.75 * radius;
+
+        //med ring 
+        r2x = tx * 0.6 * radius;
+        r2y = ty * 0.6 * radius;
+
+
+        //highring 
+        r3x = tx * 0.4 * radius;
+        r3y = ty * 0.4 * radius;
+
+
+        var line1Data = [ { "x": r1x,   "y": r1y},  { "x": r0x,  "y": r0y}]
+        var line2Data = [ { "x": r2x,   "y": r2y},  { "x": r1x,  "y": r1y}]
+        var line3Data = [ { "x": r3x,   "y": r3y},  { "x": r2x,  "y": r2y}]
+
+        //This is the accessor function we talked about above
+        var lineFunction = d3.svg.line()
+          .x(function(d) { return d.x; })
+          .y(function(d) { return d.y; })
+         .interpolate("linear");
+        
+       
+        graphicsContainer.append("path")
+        .attr("d", lineFunction(line1Data))
+        .attr("stroke", "#3ae1d0")
+        .attr("stroke-width", 2)
+        .attr("startArc", sarc)        
+        .attr("fill", "none")
+        .style("opacity", .75);
+
+
+        graphicsContainer.append("path")
+        .attr("d", lineFunction(line2Data))
+        .attr("stroke", "#ffaa01")
+        .attr("stroke-width", 2)
+        .attr("startArc", sarc)        
+        .attr("fill", "none")
+        .style("opacity", .75);
+
+        graphicsContainer.append("path")
+        .attr("d", lineFunction(line3Data))
+        .attr("stroke", "#ff0b00")
+        .attr("stroke-width", 2)
+        .attr("startArc", sarc)        
+        .attr("fill", "none")
+        .style("opacity", .75);
+
+
+    
+
+    }
+
+
+}
+
+
+
+/**
+* Main module
+*/
 µ.Axis = function module() {
     var config = {
         dimensions: [],
         layout: {}
     }, inputConfig = {}, liveConfig = {};
-    var svg, container, dispatch = d3.dispatch("hover"), radialScale, angularScale;
+    var container, dispatch = d3.dispatch("hover"), radialScale, angularScale;
     var angularTooltip, radialTooltip, geometryTooltip;
     var exports = {};
     function render(_container) {
@@ -55,9 +193,9 @@ var span = 360;
                 d.t = Array.isArray(d.t[0]) ? d.t : [ d.t ];
                 d.r = Array.isArray(d.r[0]) ? d.r : [ d.r ];
             });
-            var radius = Math.min(axisConfig.width - axisConfig.margin.left - axisConfig.margin.right-50, axisConfig.height - axisConfig.margin.top - axisConfig.margin.bottom-50) / 2;
+            radius = Math.min(axisConfig.width - axisConfig.margin.left - axisConfig.margin.right-50, axisConfig.height - axisConfig.margin.top - axisConfig.margin.bottom-50) / 2;
             radius = Math.max(10, radius);
-            var chartCenter = [ axisConfig.margin.left + radius, axisConfig.margin.top + radius ];
+            chartCenter = [ axisConfig.margin.left + radius, axisConfig.margin.top + radius ];
             var extent;
             
             extent = d3.extent(µ.util.flattenArray(dimensions.map(function(d, i) {
@@ -69,7 +207,7 @@ var span = 360;
             }
 
             //Figure out the radial scale
-            radialScale = d3.scale.linear().domain(axisConfig.radialAxis.domain !== µ.dimensionsEXTENT && axisConfig.radialAxis.domain ? axisConfig.radialAxis.domain : extent).range([ 0.6*radius, radius ]);
+            radialScale = d3.scale.linear().domain(axisConfig.radialAxis.domain !== µ.dimensionsEXTENT && axisConfig.radialAxis.domain ? axisConfig.radialAxis.domain : extent).range([ 0.6*radius, 1.0*radius ]);
             liveConfig.layout.radialAxis.domain = radialScale.domain();
             var angulardimensionsMerged = µ.util.flattenArray(dimensions.map(function(d, i) {
                 return d.t;
@@ -191,26 +329,26 @@ var span = 360;
                 gridCircles.exit().remove();
             }
 
+
+
             //Plot outside arc            
             var pi = Math.PI;             
             
             var arc = d3.svg.arc()
                 .innerRadius(0)
-                .outerRadius(radius)
+                .outerRadius(radius*2)
                 .startAngle(0 * (pi/180)) //converting from degs to radians
                 .endAngle(360 * (pi/180)) //just radians
 
-            //Background Circle             
-            /* 
-            var backgroundCircle = svg.select("path.background-circle");
-            backgroundCircle                            
-                .attr("d", arc)
-                .style("opacity", .075)
-                .attr("fill", axisConfig.backgroundColor);
-                radialAxis.select("circle.outside-circle").attr({
-                r: radius
-            }).style(lineStyle);
-             */
+              var gridCircles =  radialAxis;           
+                gridCircles.append("circle")
+                    .attr("r", radius*0.9)                
+                    .style("opacity", 0.6)
+                    .style("stroke-width", 5)
+                    .style("stroke", "#3ae1d0")
+                    .style("fill", "none");
+                
+            
             //Outside ticks
             var angularAxis = svg.select(".angular.axis-group").selectAll("g.angular-tick").data(angularAxisRange);
             var angularAxisEnter = angularAxis.enter().append("g").classed("angular-tick", true);
@@ -233,8 +371,8 @@ var span = 360;
             });
 
             //Series Arcs
-            var hasGeometry = svg.select("g.geometry-group").selectAll("g").size() > 0;
-            var geometryContainer = svg.select("g.geometry-group").selectAll("g.geometry").data(dimensions);
+            var hasGeometry = svg.select("g.outer-band-group").selectAll("g").size() > 0;
+            var outerBandContainer = svg.select("g.outer-band-group").selectAll("g.geometry").data(dimensions);
             
             if (dimensions[0] || hasGeometry) {
                 var geometryConfigs = [];
@@ -243,6 +381,8 @@ var span = 360;
                     if(typeof d.label != "undefined") {
                         sarc = d.startArc
                         earc = d.endArc
+
+                        console.log("adding an arc");
             
                         //Create an arc
                         var arc = d3.svg.arc()
@@ -252,15 +392,13 @@ var span = 360;
                             .endAngle(earc * (pi/180)) //just radians
 
                         
-                        geometryContainer.enter().append("g")
-                        .attr({
-                            "class": function(d, i) {
-                                return "geometry geometry" + i;
-                            }
-                        });
-
-                        geometryContainer.enter().append("path")
+                       
+                        outerBandContainer.enter().append("path")
                         .attr("d", arc)
+                        .attr("groupId", d.groupId)
+                        .attr("label", d.label)
+                        .attr("startArc", sarc)
+                        .attr("endArc", earc)
                         .attr("fill", d.color)
                         .style("opacity", .75);
                     }
@@ -272,6 +410,13 @@ var span = 360;
             
         
         });
+
+
+        //STEVE TEST
+        getDimensionByGroupId(5);
+        getDimensionByLabel("CVE");
+        plotBar(1,1,1);
+
         return exports;
     }
     exports.render = function(_container) {
