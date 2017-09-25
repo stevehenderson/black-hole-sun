@@ -1,13 +1,12 @@
 var blackholesun = {
-    version: "0.1.1"
+    version: "0.2"
 };
 
-var µ = blackholesun;
+var mu = blackholesun;
 
 //Default arc span of the plot, in degrees.  360 for full polar plot
 var span = 360;
 
-var svg;
 
 var chartCenter;
 
@@ -18,7 +17,8 @@ var radius;
 */
 function getDimensionByGroupId(aGroupId) {
     var node = null;
-    var outerBandContainer = svg.select("g.outer-band-group");
+    
+    var outerBandContainer = d3.select("g.outer-band-group-bhs");
     var nodes = outerBandContainer.selectAll("path");
 
     nodes.each(function(d,i) {    
@@ -36,12 +36,13 @@ function getDimensionByGroupId(aGroupId) {
 */
 function getDimensionByLabel(aLabel) {
     var node = null;
-    var outerBandContainer = svg.select("g.outer-band-group");
+     var svg = d3.select("svg.chart-root");
+    var outerBandContainer = svg.select("g.outer-band-group-bhs");
     var nodes = outerBandContainer.selectAll("path");
 
     nodes.each(function(d,i) {    
         if(d.label==aLabel)               {
-            console.log("Found node "+ d.groupId + " with label " + d.label);   
+            //console.log("Found node "+ d.groupId + " with label " + d.label);   
             node = d;  
          }       
     });
@@ -66,7 +67,7 @@ function randomBars() {
             cap = Math.random();
             for(i=0; i < w; i++) {
                 nextLevel = cap*Math.random();
-                plotBar(gId, i, nextLevel);
+                plotBar(dim, i, nextLevel);
             }
         }
     }
@@ -76,10 +77,9 @@ function randomBars() {
 /**
 * Adds a bar given a groupId, channel within that label {0..width}, and a level (0..1)
 */
-function plotBar(gId, channel, level) {
+function plotBar(dim, channel, level) {
 
-    //Get the dimension
-    var dim = getDimensionByGroupId(gId)
+    
     if(dim.type != "undefined") {
 
         sarc= dim.startArc;
@@ -89,10 +89,11 @@ function plotBar(gId, channel, level) {
 
         if(channelArc > earc) channelArc = earc;
 
-              
-        var graphicsContainer = svg.select("g.geometry-group");
-           
+
         
+              
+        var graphicsContainer = d3.select("g.geometry-group-bhs");
+           
         
 
         cx = 0;
@@ -102,7 +103,7 @@ function plotBar(gId, channel, level) {
         ty = Math.sin((channelArc-90) * (Math.PI / 180));
 
 
-        console.log("adding a line channelArc:" + channelArc + " tx:" + tx + "   ty:" + ty);
+        //console.log("adding a line channelArc:" + channelArc + " tx:" + tx + "   ty:" + ty);
 
         //Scale lines based on level
         s1 = level/0.3;
@@ -149,7 +150,7 @@ function plotBar(gId, channel, level) {
         graphicsContainer.append("path")
         .attr("d", lineFunction(line1Data))
         .attr("stroke", "#3ae1d0")
-        .attr("stroke-width", 2)
+        .attr("stroke-width", 1)
         .attr("startArc", sarc)        
         .attr("fill", "none")
         .style("opacity", .75);
@@ -188,7 +189,7 @@ function plotBar(gId, channel, level) {
 /**
 * Main module
 */
-µ.Axis = function module() {
+mu.Axis = function module() {
     var config = {
         dimensions: [],
         layout: {}
@@ -210,8 +211,8 @@ function plotBar(gId, channel, level) {
         container.datum(dimensions).each(function(_dimensions, _index) {
             var dimensionsOriginal = _dimensions.slice();
             liveConfig = {
-                dimensions: µ.util.cloneJson(dimensionsOriginal),
-                layout: µ.util.cloneJson(axisConfig)
+                dimensions: mu.util.cloneJson(dimensionsOriginal),
+                layout: mu.util.cloneJson(axisConfig)
             };
             var colorIndex = 0;
             dimensionsOriginal.forEach(function(d, i) {
@@ -241,18 +242,18 @@ function plotBar(gId, channel, level) {
             chartCenter = [ axisConfig.margin.left + radius, axisConfig.margin.top + radius ];
             var extent;
             
-            extent = d3.extent(µ.util.flattenArray(dimensions.map(function(d, i) {
+            extent = d3.extent(mu.util.flattenArray(dimensions.map(function(d, i) {
                 return d.r;
             })));
         
-            if (axisConfig.radialAxis.domain !== µ.dimensionsEXTENT) {
+            if (axisConfig.radialAxis.domain !== mu.dimensionsEXTENT) {
                 extent[0] = 0;
             }
 
             //Figure out the radial scale
-            radialScale = d3.scale.linear().domain(axisConfig.radialAxis.domain !== µ.dimensionsEXTENT && axisConfig.radialAxis.domain ? axisConfig.radialAxis.domain : extent).range([ 0.6*radius, 1.0*radius ]);
+            radialScale = d3.scale.linear().domain(axisConfig.radialAxis.domain !== mu.dimensionsEXTENT && axisConfig.radialAxis.domain ? axisConfig.radialAxis.domain : extent).range([ 0.6*radius, 1.0*radius ]);
             liveConfig.layout.radialAxis.domain = radialScale.domain();
-            var angulardimensionsMerged = µ.util.flattenArray(dimensions.map(function(d, i) {
+            var angulardimensionsMerged = mu.util.flattenArray(dimensions.map(function(d, i) {
                 return d.t;
             }));
             
@@ -261,7 +262,7 @@ function plotBar(gId, channel, level) {
             var hasOnlyLineOrDotPlot = false;
             var isOrdinal= false;
             var needsEndSpacing = axisConfig.needsEndSpacing === null ? isOrdinal || !hasOnlyLineOrDotPlot : axisConfig.needsEndSpacing;
-            var useProvidedDomain = axisConfig.angularAxis.domain && axisConfig.angularAxis.domain !== µ.dimensionsEXTENT && !isOrdinal && axisConfig.angularAxis.domain[0] >= 0;
+            var useProvidedDomain = axisConfig.angularAxis.domain && axisConfig.angularAxis.domain !== mu.dimensionsEXTENT && !isOrdinal && axisConfig.angularAxis.domain[0] >= 0;
             var angularDomain = useProvidedDomain ? axisConfig.angularAxis.domain : d3.extent(angulardimensionsMerged);
             var angularDomainStep = Math.abs(angulardimensionsMerged[1] - angulardimensionsMerged[0]);
             if (hasOnlyLineOrDotPlot && !isOrdinal) {
@@ -293,12 +294,12 @@ function plotBar(gId, channel, level) {
             angularScale = d3.scale.linear().domain(angularDomainWithPadding.slice(0, 2)).range(axisConfig.direction === "clockwise" ? [ 0, span ] : [ span, 0 ]);
             liveConfig.layout.angularAxis.domain = angularScale.domain();
             liveConfig.layout.angularAxis.endPadding = needsEndSpacing ? angularDomainStep : 0;
-            svg = d3.select(this).select("svg.chart-root");
+            var svg = d3.select(this).select("svg.chart-root");
             if (typeof svg === "undefined" || svg.empty()) {
                 var skeleton = '<svg xmlns="http://www.w3.org/2000/svg" class="chart-root">' 
                         + '<g class="outer-group">' + '<g class="chart-group">' 
-                        + '<path class="background-circle"></path>' + '<g class="outer-band-group"></g>' 
-                        + '<g class="radial axis-group"></g>' +'<g class="geometry-group"></g>' + 
+                        + '<path class="background-circle"></path>' + '<g class="outer-band-group-bhs"></g>' 
+                        + '<g class="radial axis-group"></g>' +'<g class="geometry-group-bhs"></g>' + 
                         + '<circle class="outside-circle"></circle>' + '<g class="angular axis-group"></g>' 
                         + '<g class="guides-group"><line></line><circle r="0"></circle></g>' + "</g>" 
                         + '<g class="tooltips-group"></g>' + '<g class="title-group"><text></text></g>' 
@@ -414,8 +415,8 @@ function plotBar(gId, channel, level) {
             });
 
             //Series Arcs
-            var hasGeometry = svg.select("g.outer-band-group").selectAll("g").size() > 0;
-            var outerBandContainer = svg.select("g.outer-band-group").selectAll("g.geometry").data(dimensions);
+            var hasGeometry = svg.select("g.outer-band-group-bhs").selectAll("g").size() > 0;
+            var outerBandContainer = svg.select("g.outer-band-group-bhs").selectAll("g.geometry").data(dimensions);
             
             if (dimensions[0] || hasGeometry) {
                 var geometryConfigs = [];
@@ -456,11 +457,11 @@ function plotBar(gId, channel, level) {
 
 
         //STEVE TEST
-        getDimensionByGroupId(5);
-        getDimensionByLabel("CVE");
-        plotBar(1,1,0.6);
-        plotBar(12,1,0.2);
-        plotBar(12,5,0.8);
+        n=getDimensionByGroupId(5);
+        //getDimensionByLabel("CVE");
+        plotBar(n,1,0.6);
+        
+        //plotBar(12,5,0.8);
         randomBars();
 
         return exports;
@@ -473,16 +474,16 @@ function plotBar(gId, channel, level) {
         if (!arguments.length) {
             return config;
         }
-        var xClone = µ.util.cloneJson(_x);
+        var xClone = mu.util.cloneJson(_x);
         xClone.dimensions.forEach(function(d, i) {
             if (!config.dimensions[i]) {
                 config.dimensions[i] = {};
             }
-            µ.util.deepExtend(config.dimensions[i], µ.Axis.defaultConfig().dimensions[0]);
-            µ.util.deepExtend(config.dimensions[i], d);
+            mu.util.deepExtend(config.dimensions[i], mu.Axis.defaultConfig().dimensions[0]);
+            mu.util.deepExtend(config.dimensions[i], d);
         });
-        µ.util.deepExtend(config.layout, µ.Axis.defaultConfig().layout);
-        µ.util.deepExtend(config.layout, xClone.layout);
+        mu.util.deepExtend(config.layout, mu.Axis.defaultConfig().layout);
+        mu.util.deepExtend(config.layout, xClone.layout);
         return this;
     };
     exports.getLiveConfig = function() {
@@ -507,7 +508,7 @@ function plotBar(gId, channel, level) {
 
 
 
-µ.Axis.defaultConfig = function(d, i) {
+mu.Axis.defaultConfig = function(d, i) {
     var config = {
         dimensions: [ {
             t: [ 1, 2, 3, 4 ],
@@ -577,14 +578,14 @@ function plotBar(gId, channel, level) {
     return config;
 };
 
-µ.util = {};
+mu.util = {};
 
-µ.dimensionsEXTENT = "dimensionsExtent";
+mu.dimensionsEXTENT = "dimensionsExtent";
 
-µ.AREA = "AreaChart";
+mu.AREA = "AreaChart";
 
 
-µ.util._override = function(_objA, _objB) {
+mu.util._override = function(_objA, _objB) {
     for (var x in _objA) {
         if (x in _objB) {
             _objB[x] = _objA[x];
@@ -592,17 +593,17 @@ function plotBar(gId, channel, level) {
     }
 };
 
-µ.util._extend = function(_objA, _objB) {
+mu.util._extend = function(_objA, _objB) {
     for (var x in _objA) {
         _objB[x] = _objA[x];
     }
 };
 
-µ.util._rndSnd = function() {
+mu.util._rndSnd = function() {
     return Math.random() * 2 - 1 + (Math.random() * 2 - 1) + (Math.random() * 2 - 1);
 };
 
-µ.util.dimensionsFromEquation2 = function(_equation, _step) {
+mu.util.dimensionsFromEquation2 = function(_equation, _step) {
     var step = _step || 6;
     //spanset
     var dimensions = d3.range(0, span + step, step).map(function(deg, index) {
@@ -613,7 +614,7 @@ function plotBar(gId, channel, level) {
     return dimensions;
 };
 
-µ.util.dimensionsFromEquation = function(_equation, _step, _name) {
+mu.util.dimensionsFromEquation = function(_equation, _step, _name) {
     var step = _step || 6;
     var t = [], r = [];
     //spanset
@@ -633,7 +634,7 @@ function plotBar(gId, channel, level) {
     return result;
 };
 
-µ.util.ensureArray = function(_val, _count) {
+mu.util.ensureArray = function(_val, _count) {
     if (typeof _val === "undefined") {
         return null;
     }
@@ -643,18 +644,18 @@ function plotBar(gId, channel, level) {
     });
 };
 
-µ.util.fillArrays = function(_obj, _valueNames, _count) {
+mu.util.fillArrays = function(_obj, _valueNames, _count) {
     _valueNames.forEach(function(d, i) {
-        _obj[d] = µ.util.ensureArray(_obj[d], _count);
+        _obj[d] = mu.util.ensureArray(_obj[d], _count);
     });
     return _obj;
 };
 
-µ.util.cloneJson = function(json) {
+mu.util.cloneJson = function(json) {
     return JSON.parse(JSON.stringify(json));
 };
 
-µ.util.deepExtend = function(destination, source) {
+mu.util.deepExtend = function(destination, source) {
     for (var property in source) {
         if (source[property] && source[property].constructor && source[property].constructor === Object) {
             destination[property] = destination[property] || {};
@@ -666,7 +667,7 @@ function plotBar(gId, channel, level) {
     return destination;
 };
 
-µ.util.validateKeys = function(obj, keys) {
+mu.util.validateKeys = function(obj, keys) {
     if (typeof keys === "string") {
         keys = keys.split(".");
     }
@@ -674,51 +675,51 @@ function plotBar(gId, channel, level) {
     return obj[next] && (!keys.length || objHasKeys(obj[next], keys));
 };
 
-µ.util.sumArrays = function(a, b) {
+mu.util.sumArrays = function(a, b) {
     return d3.zip(a, b).map(function(d, i) {
         return d3.sum(d);
     });
 };
 
-µ.util.arrayLast = function(a) {
+mu.util.arrayLast = function(a) {
     return a[a.length - 1];
 };
 
-µ.util.arrayEqual = function(a, b) {
+mu.util.arrayEqual = function(a, b) {
     var i = Math.max(a.length, b.length, 1);
     while (i-- >= 0 && a[i] === b[i]) ;
     return i === -2;
 };
 
-µ.util.flattenArray = function(arr) {
+mu.util.flattenArray = function(arr) {
     var r = [];
-    while (!µ.util.arrayEqual(r, arr)) {
+    while (!mu.util.arrayEqual(r, arr)) {
         r = arr;
         arr = [].concat.apply([], arr);
     }
     return arr;
 };
 
-µ.util.deduplicate = function(arr) {
+mu.util.deduplicate = function(arr) {
     return arr.filter(function(v, i, a) {
         return a.indexOf(v) === i;
     });
 };
 
-µ.util.convertToCartesian = function(radius, theta) {
+mu.util.convertToCartesian = function(radius, theta) {
     var thetaRadians = theta * Math.PI / 180;
     var x = radius * Math.cos(thetaRadians);
     var y = radius * Math.sin(thetaRadians);
     return [ x, y ];
 };
 
-µ.util.round = function(_value, _digits) {
+mu.util.round = function(_value, _digits) {
     var digits = _digits || 2;
     var mult = Math.pow(10, digits);
     return Math.round(_value * mult) / mult;
 };
 
-µ.util.getMousePos = function(_referenceElement) {
+mu.util.getMousePos = function(_referenceElement) {
     var mousePos = d3.mouse(_referenceElement.node());
     var mouseX = mousePos[0];
     var mouseY = mousePos[1];
@@ -731,7 +732,7 @@ function plotBar(gId, channel, level) {
     return mouse;
 };
 
-µ.util.duplicatesCount = function(arr) {
+mu.util.duplicatesCount = function(arr) {
     var uniques = {}, val;
     var dups = {};
     for (var i = 0, len = arr.length; i < len; i++) {
@@ -746,11 +747,11 @@ function plotBar(gId, channel, level) {
     return dups;
 };
 
-µ.util.duplicates = function(arr) {
-    return Object.keys(µ.util.duplicatesCount(arr));
+mu.util.duplicates = function(arr) {
+    return Object.keys(mu.util.duplicatesCount(arr));
 };
 
-µ.util.translator = function(obj, sourceBranch, targetBranch, reverse) {
+mu.util.translator = function(obj, sourceBranch, targetBranch, reverse) {
     if (reverse) {
         var targetBranchCopy = targetBranch.slice();
         targetBranch = sourceBranch;
@@ -784,11 +785,11 @@ function plotBar(gId, channel, level) {
     }, obj);
 };
 
-µ.AreaChart = function module() {
-    return µ.PolyChart();
+mu.AreaChart = function module() {
+    return mu.PolyChart();
 };
 
-µ.AreaChart.defaultConfig = function() {
+mu.AreaChart.defaultConfig = function() {
     var config = {
         geometryConfig: {
             geometryType: "arc"
@@ -797,13 +798,13 @@ function plotBar(gId, channel, level) {
     return config;
 };
 
-µ.DotPlot = function module() {
-    return µ.PolyChart();
+mu.DotPlot = function module() {
+    return mu.PolyChart();
 };
 
 
 
-µ.tooltipPanel = function() {
+mu.tooltipPanel = function() {
     var tooltipEl, tooltipTextEl, backgroundEl;
     var config = {
         container: null,
@@ -812,7 +813,7 @@ function plotBar(gId, channel, level) {
         color: "white",
         padding: 5
     };
-    var id = "tooltip-" + µ.tooltipPanel.uid++;
+    var id = "tooltip-" + mu.tooltipPanel.uid++;
     var tickSize = 10;
     var exports = function() {
         tooltipEl = config.container.selectAll("g." + id).dimensions([ 0 ]);
@@ -891,26 +892,26 @@ function plotBar(gId, channel, level) {
         return exports;
     };
     exports.config = function(_x) {
-        µ.util.deepExtend(config, _x);
+        mu.util.deepExtend(config, _x);
         return exports;
     };
     return exports;
 };
 
-µ.tooltipPanel.uid = 1;
+mu.tooltipPanel.uid = 1;
 
-µ.adapter = {};
+mu.adapter = {};
 
-µ.adapter.plotly = function module() {
+mu.adapter.plotly = function module() {
     var exports = {};
     exports.convert = function(_inputConfig, reverse) {
         var outputConfig = {};
         if (_inputConfig.dimensions) {
             outputConfig.dimensions = _inputConfig.dimensions.map(function(d, i) {
-                var r = µ.util.deepExtend({}, d);
+                var r = mu.util.deepExtend({}, d);
                 var toTranslate = [ [ r, [ "marker", "color" ], [ "color" ] ], [ r, [ "marker", "opacity" ], [ "opacity" ] ], [ r, [ "marker", "line", "color" ], [ "strokeColor" ] ], [ r, [ "marker", "line", "dash" ], [ "strokeDash" ] ], [ r, [ "marker", "line", "width" ], [ "strokeSize" ] ], [ r, [ "marker", "symbol" ], [ "dotType" ] ], [ r, [ "marker", "size" ], [ "dotSize" ] ], [ r, [ "marker", "barWidth" ], [ "barWidth" ] ], [ r, [ "line", "interpolation" ], [ "lineInterpolation" ] ], [ r, [ "showlegend" ], [ "visibleInLegend" ] ] ];
                 toTranslate.forEach(function(d, i) {
-                    µ.util.translator.apply(null, d.concat(reverse));
+                    mu.util.translator.apply(null, d.concat(reverse));
                 });
                 if (!reverse) {
                     delete r.marker;
@@ -957,7 +958,7 @@ function plotBar(gId, channel, level) {
                 return r;
             });
             if (!reverse && _inputConfig.layout && _inputConfig.layout.barmode === "stack") {
-                var duplicates = µ.util.duplicates(outputConfig.dimensions.map(function(d, i) {
+                var duplicates = mu.util.duplicates(outputConfig.dimensions.map(function(d, i) {
                     return d.geometry;
                 }));
                 outputConfig.dimensions.forEach(function(d, i) {
@@ -969,10 +970,10 @@ function plotBar(gId, channel, level) {
             }
         }
         if (_inputConfig.layout) {
-            var r = µ.util.deepExtend({}, _inputConfig.layout);
+            var r = mu.util.deepExtend({}, _inputConfig.layout);
             var toTranslate = [ [ r, [ "plot_bgcolor" ], [ "backgroundColor" ] ], [ r, [ "showlegend" ], [ "showLegend" ] ], [ r, [ "radialaxis" ], [ "radialAxis" ] ], [ r, [ "angularaxis" ], [ "angularAxis" ] ], [ r.angularaxis, [ "showline" ], [ "gridLinesVisible" ] ], [ r.angularaxis, [ "showticklabels" ], [ "labelsVisible" ] ], [ r.angularaxis, [ "nticks" ], [ "ticksCount" ] ], [ r.angularaxis, [ "tickorientation" ], [ "tickOrientation" ] ], [ r.angularaxis, [ "ticksuffix" ], [ "ticksSuffix" ] ], [ r.angularaxis, [ "range" ], [ "domain" ] ], [ r.angularaxis, [ "endpadding" ], [ "endPadding" ] ], [ r.radialaxis, [ "showline" ], [ "gridLinesVisible" ] ], [ r.radialaxis, [ "tickorientation" ], [ "tickOrientation" ] ], [ r.radialaxis, [ "ticksuffix" ], [ "ticksSuffix" ] ], [ r.radialaxis, [ "range" ], [ "domain" ] ], [ r.angularAxis, [ "showline" ], [ "gridLinesVisible" ] ], [ r.angularAxis, [ "showticklabels" ], [ "labelsVisible" ] ], [ r.angularAxis, [ "nticks" ], [ "ticksCount" ] ], [ r.angularAxis, [ "tickorientation" ], [ "tickOrientation" ] ], [ r.angularAxis, [ "ticksuffix" ], [ "ticksSuffix" ] ], [ r.angularAxis, [ "range" ], [ "domain" ] ], [ r.angularAxis, [ "endpadding" ], [ "endPadding" ] ], [ r.radialAxis, [ "showline" ], [ "gridLinesVisible" ] ], [ r.radialAxis, [ "tickorientation" ], [ "tickOrientation" ] ], [ r.radialAxis, [ "ticksuffix" ], [ "ticksSuffix" ] ], [ r.radialAxis, [ "range" ], [ "domain" ] ], [ r.font, [ "outlinecolor" ], [ "outlineColor" ] ], [ r.legend, [ "traceorder" ], [ "reverseOrder" ] ], [ r, [ "labeloffset" ], [ "labelOffset" ] ], [ r, [ "defaultcolorrange" ], [ "defaultColorRange" ] ] ];
             toTranslate.forEach(function(d, i) {
-                µ.util.translator.apply(null, d.concat(reverse));
+                mu.util.translator.apply(null, d.concat(reverse));
             });
             if (!reverse) {
                 if (r.angularAxis && typeof r.angularAxis.ticklen !== "undefined") {
@@ -1033,8 +1034,8 @@ function plotBar(gId, channel, level) {
     return exports;
 };
 
-µ.PolyChart = function module() {
-    var config = [ µ.PolyChart.defaultConfig() ];
+mu.PolyChart = function module() {
+    var config = [ mu.PolyChart.defaultConfig() ];
     var dispatch = d3.dispatch("hover");
     var dashArray = {
         solid: "none",
@@ -1230,8 +1231,8 @@ function plotBar(gId, channel, level) {
             if (!config[i]) {
                 config[i] = {};
             }
-            µ.util.deepExtend(config[i], µ.PolyChart.defaultConfig());
-            µ.util.deepExtend(config[i], d);
+            mu.util.deepExtend(config[i], mu.PolyChart.defaultConfig());
+            mu.util.deepExtend(config[i], d);
         });
         return this;
     };
@@ -1242,7 +1243,7 @@ function plotBar(gId, channel, level) {
     return exports;
 };
 
-µ.PolyChart.defaultConfig = function() {
+mu.PolyChart.defaultConfig = function() {
     var config = {
         dimensions: {
             name: "geom1",
