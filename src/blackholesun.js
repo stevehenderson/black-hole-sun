@@ -37,7 +37,7 @@ function getDimensionByGroupId(aGroupId) {
 */
 function getDimensionByLabel(aLabel) {
     var node = null;
-    var svg = d3.select("svg.chart-root");
+    var svg = d3.select("svg.chart-root-blackholesun");
     var outerBandContainer = svg.select("g.outer-band-group-bhs");
     var nodes = outerBandContainer.selectAll("path");
 
@@ -54,10 +54,13 @@ function getDimensionByLabel(aLabel) {
 
 function getBar(groupId, channel, size) {
     var node = null;
-    var svg = d3.select("svg.chart-root");
+    var svg = d3.select("svg.chart-root-blackholesun");
     tgtLabel = "#bar" + groupId + "-" + channel + "-" + size;
     var outerBandContainer = svg.select("g.geometry-group-bhs");
     var node = outerBandContainer.select(tgtLabel);    
+    if(node.type=="undefined") {
+        console.log("getbar couldn't hook :" + tgtLabel)
+    }
     return node;
 }
 
@@ -67,6 +70,7 @@ function clearBar(groupId, channel) {
     if(bar1.type!="undefined") {
        bar1.remove(); 
     }
+   
     var bar2 = getBar (groupId, channel, "med");
     if(bar1.type!="undefined") {
        bar2.remove(); 
@@ -311,9 +315,9 @@ mu.Axis = function module() {
             angularScale = d3.scale.linear().domain(angularDomainWithPadding.slice(0, 2)).range(axisConfig.direction === "clockwise" ? [ 0, span ] : [ span, 0 ]);
             liveConfig.layout.angularAxis.domain = angularScale.domain();
             liveConfig.layout.angularAxis.endPadding = needsEndSpacing ? angularDomainStep : 0;
-            var svg = d3.select(this).select("svg.chart-root");
+            var svg = d3.select(this).select("svg.chart-root-blackholesun");
             if (typeof svg === "undefined" || svg.empty()) {
-                var skeleton = '<svg xmlns="http://www.w3.org/2000/svg" class="chart-root">' 
+                var skeleton = '<svg xmlns="http://www.w3.org/2000/svg" class="chart-root-blackholesun">' 
                         + '<g class="outer-group">' + '<g class="chart-group">' 
                         + '<path class="background-circle"></path>' + '<g class="outer-band-group-bhs"></g>' 
                         + '<g class="radial axis-group"></g>' +'<g class="geometry-group-bhs"></g>' + 
