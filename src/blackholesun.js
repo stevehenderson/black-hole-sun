@@ -1,5 +1,5 @@
 var blackholesun = {
-    version: "0.2"
+    version: "0.2.1"
 };
 
 var mu = blackholesun;
@@ -11,6 +11,7 @@ var span = 360;
 var chartCenter;
 
 var radius;
+
 
 /**
 *   Return a dimension arc given a groupID
@@ -36,7 +37,7 @@ function getDimensionByGroupId(aGroupId) {
 */
 function getDimensionByLabel(aLabel) {
     var node = null;
-     var svg = d3.select("svg.chart-root");
+    var svg = d3.select("svg.chart-root");
     var outerBandContainer = svg.select("g.outer-band-group-bhs");
     var nodes = outerBandContainer.selectAll("path");
 
@@ -51,33 +52,45 @@ function getDimensionByLabel(aLabel) {
 
 
 
-/*
-*  Generates some random bars
-*/
-function randomBars() {
-
-    for(gId=1; gId <=14; gId++ ) {
-
-        var dim = getDimensionByGroupId(gId)
-
-        if(dim.type != "undefined") {
-            sarc = dim.startArc;
-            earc = dim.endArc;
-            w=(earc-sarc);
-            cap = Math.random();
-            for(i=0; i < w; i++) {
-                nextLevel = cap*Math.random();
-                plotBar(dim, i, nextLevel);
-            }
-        }
-    }
+function getBar(groupId, channel, size) {
+    var node = null;
+    var svg = d3.select("svg.chart-root");
+    tgtLabel = "#bar" + groupId + "-" + channel + "-" + size;
+    var outerBandContainer = svg.select("g.geometry-group-bhs");
+    var node = outerBandContainer.select(tgtLabel);    
+    return node;
 }
+
+
+function clearBar(groupId, channel) {
+    var bar1 = getBar (groupId, channel, "low");
+    if(bar1.type!="undefined") {
+       bar1.remove(); 
+    }
+    var bar2 = getBar (groupId, channel, "med");
+    if(bar1.type!="undefined") {
+       bar2.remove(); 
+    }
+    var bar3 = getBar (groupId, channel, "high");
+    if(bar1.type!="undefined") {
+       bar3.remove(); 
+    }
+
+}
+
+
 
 
 /**
 * Adds a bar given a groupId, channel within that label {0..width}, and a level (0..1)
 */
 function plotBar(dim, channel, level) {
+
+
+    //First clear bar!
+    clearBar(dim.groupId,channel, "low");
+    clearBar(dim.groupId,channel, "med");
+    clearBar(dim.groupId,channel, "high");
 
     
     if(dim.type != "undefined") {
@@ -153,6 +166,7 @@ function plotBar(dim, channel, level) {
         .attr("stroke-width", 1)
         .attr("startArc", sarc)        
         .attr("fill", "none")
+        .attr("id", "bar"+ dim.groupId + "-" + channel + "-low")
         .style("opacity", .75);
         }
 
@@ -164,6 +178,7 @@ function plotBar(dim, channel, level) {
         .attr("stroke-width", 2)
         .attr("startArc", sarc)        
         .attr("fill", "none")
+        .attr("id", "bar"+dim.groupId + "-" + channel + "-med")
         .style("opacity", .75);
         }
 
@@ -174,22 +189,24 @@ function plotBar(dim, channel, level) {
         .attr("stroke-width", 2)
         .attr("startArc", sarc)        
         .attr("fill", "none")
+        .attr("id", "bar"+dim.groupId + "-" + channel + "-high")
         .style("opacity", .75);
         }
-
-    
 
     }
 
 
 }
 
-
-
 /**
 * Main module
 */
 mu.Axis = function module() {
+
+
+
+
+    
     var config = {
         dimensions: [],
         layout: {}
@@ -455,17 +472,15 @@ mu.Axis = function module() {
         
         });
 
-
-        //STEVE TEST
-        n=getDimensionByGroupId(5);
-        //getDimensionByLabel("CVE");
-        plotBar(n,1,0.6);
         
-        //plotBar(12,5,0.8);
-        randomBars();
-
         return exports;
+    
+
+
     }
+
+   
+
     exports.render = function(_container) {
         render(_container);
         return this;
@@ -506,7 +521,60 @@ mu.Axis = function module() {
 };
 
 
+mu.clear = function module() {
+    for(x=1; x<=14;x++) {
+        var dm = getDimensionByGroupId(x);
+        if(dm.type!="undefined") {
+            sarc = dm.startArc;
+            earc = dm.endArc;
+            w = earc-sarc;
+            for(i=0;i <w; i++) {
+                clearBar(x,i);
+            }
+        }
+    }
+};
 
+/*
+*  Generates some random bars
+*/
+mu.randomBars = function module() {
+
+    for(gId=1; gId <=14; gId++ ) {
+
+        var dim = getDimensionByGroupId(gId)
+
+        if(dim.type != "undefined") {
+            sarc = dim.startArc;
+            earc = dim.endArc;
+            w=(earc-sarc);
+            cap = Math.random();
+            for(i=0; i < w; i++) {
+                nextLevel = cap*Math.random();
+                plotBar(dim, i, nextLevel);
+            }
+        }
+    }
+}
+
+      
+mu.updateBar = function module(groupId, channel, level) {
+    
+    node = getDimensionByGroupId(groupId);
+    if(node != null) {
+        if(node.type !="undefined"){
+            plotBar(node, channel, level);
+        } else {
+            console.log("Could not update bar for group " + groupId);
+            console.log("Failed to find  group with id " + groupId);
+        }
+    } else {
+            console.log("Could not update bar for group " + groupId);
+            console.log("Failed to find  group with id (its null)" + groupId);
+        }
+
+    
+}
 
 mu.Axis.defaultConfig = function(d, i) {
     var config = {

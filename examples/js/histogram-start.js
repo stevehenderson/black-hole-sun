@@ -1,6 +1,4 @@
-﻿
-  
-var configs = [    
+﻿var configs = [    
     //r:  Length of BLUE series
     {
       dimensions: [                  
@@ -30,6 +28,7 @@ var configs = [
         orientation: 375, 
         span: 360,
         reverseOrder: true,
+        barWidth: 2,
         radialAxis: { visible: true},
         barmode: 'stack', backgroundColor: '#3ae1d0', showLegend: false }
     }            
@@ -40,6 +39,62 @@ configs.forEach(function(_config){
     mu.util.deepExtend(config, _config);
     console.log(JSON.stringify(mu.adapter.plotly().convert(config, true)));
     var ms =blackholesun.Axis().config(config).render(d3.select('#blackholesun').append('div'));
+    
+    //blackholesun.randomBars();
+
+    //Create some animation
+    grpChannelCount = [60,40,20,30,10,20,20,210,20,30,20,20,30,15,15]
+
+    grpLevels = [];
+    for(grp=1; grp<=15; grp++) {
+        maxLevel = Math.random();
+        channelLevel = [];
+        for(channel=1; channel <=grpChannelCount[grp-1]; channel++) {
+            channelLevel.push(maxLevel*Math.random());
+        }
+        grpLevels.push(channelLevel);
+    }
+
+    function updateGraph(levels) {
+        for(grp = 0; grp< levels.length; grp++) {
+            nextGroup=levels[grp];
+            for(channel=0; channel < nextGroup.length; channel++) {
+                t = nextGroup[channel];
+                blackholesun.updateBar(grp, channel, t);
+            }
+        }
+
+    }
+
+
+    function tweakLevels(levels) {
+
+        for(grp = 0; grp< levels.length; grp++) {
+            nextGroup=levels[grp];
+            for(channel=0; channel < nextGroup.length; channel++) {
+                old = nextGroup[channel];
+                change=Math.random();
+                if(change > 0.5) {
+                    delta = 0.25-(0.65*Math.random());
+                    newvalue=  old+delta;
+                    if(newvalue <0) newvalue=0;
+                    nextGroup[channel] = newvalue;
+
+                    blackholesun.updateBar(grp+1, channel, newvalue);
+                }                
+            }
+        }
+
+    }
+
+    updateGraph(grpLevels);
+
+
+
+    setInterval(function () {
+        tweakLevels(grpLevels);        
+    }, 1000);
+
     
 
 });
